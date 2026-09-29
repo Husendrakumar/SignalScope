@@ -1,0 +1,35 @@
+# Python virtual environment
+backend/.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node dependencies & build output
+frontend/node_modules/
+frontend/dist/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Test caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Local runtime data
+uploads/
+sessions/
+runtime/
