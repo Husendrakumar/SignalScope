@@ -88,7 +88,7 @@ function formatFreq(hz) {
 /* ================================================================== */
 /*  Main Component                                                    */
 /* ================================================================== */
-export default function VisualizationPanel({ selectedFile, analysisData }) {
+export default function VisualizationPanel({ theme = 'dark', selectedFile, analysisData }) {
   const [activeTab, setActiveTab] = useState('waveform');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -250,16 +250,16 @@ export default function VisualizationPanel({ selectedFile, analysisData }) {
         )}
 
         {!loading && !error && vizData && activeTab === 'waveform' && (
-          <WaveformPlot data={vizData} />
+          <WaveformPlot theme={theme} data={vizData} />
         )}
         {!loading && !error && vizData && activeTab === 'spectrum' && (
-          <SpectrumPlot data={vizData} />
+          <SpectrumPlot theme={theme} data={vizData} />
         )}
         {!loading && !error && vizData && activeTab === 'spectrogram' && (
-          <SpectrogramPlot data={vizData} />
+          <SpectrogramPlot theme={theme} data={vizData} />
         )}
         {!loading && !error && vizData && activeTab === 'constellation' && (
-          <IQPlanePlot data={vizData} />
+          <IQPlanePlot theme={theme} data={vizData} />
         )}
 
         {!loading && !error && !vizData && (
@@ -276,7 +276,7 @@ export default function VisualizationPanel({ selectedFile, analysisData }) {
 /* ================================================================== */
 /*  WAVEFORM PLOT                                                     */
 /* ================================================================== */
-function WaveformPlot({ data }) {
+function WaveformPlot({ theme, data }) {
   const traces = useMemo(() => {
     if (data.format === 'IQ') {
       const realI = data.real_i || [];
@@ -312,7 +312,7 @@ function WaveformPlot({ data }) {
     }
   }, [data]);
 
-  const layout = useMemo(() => baseLayout({
+  const layout = useMemo(() => baseLayout(theme, {
     xaxis: { title: 'Time (s)' },
     yaxis: { title: 'Amplitude' },
     showlegend: data.format === 'IQ',
@@ -324,7 +324,7 @@ function WaveformPlot({ data }) {
 /* ================================================================== */
 /*  SPECTRUM PLOT                                                     */
 /* ================================================================== */
-function SpectrumPlot({ data }) {
+function SpectrumPlot({ theme, data }) {
   const { scaledFreqs, xTitle, peakFreq, peakMag, scaledPeakFreq } = useMemo(() => {
     const freqs = data.frequencies || [];
     const mags = data.magnitudes_db || [];
@@ -383,7 +383,7 @@ function SpectrumPlot({ data }) {
   }, [data, scaledFreqs, peakFreq, peakMag, scaledPeakFreq]);
 
   const layout = useMemo(() => {
-    return baseLayout({
+    return baseLayout(theme, {
       xaxis: { title: xTitle },
       yaxis: { title: 'Magnitude (dB)' },
       showlegend: true,
@@ -396,7 +396,7 @@ function SpectrumPlot({ data }) {
 /* ================================================================== */
 /*  SPECTROGRAM PLOT                                                  */
 /* ================================================================== */
-function SpectrogramPlot({ data }) {
+function SpectrogramPlot({ theme, data }) {
   const { scaledFreqs, yTitle } = useMemo(() => {
     const freqAxis = data.frequency_axis || [];
     const absMax = freqAxis.length > 0 ? Math.max(...freqAxis.map(Math.abs)) : 1;
@@ -440,7 +440,7 @@ function SpectrogramPlot({ data }) {
   }, [data, scaledFreqs]);
 
   const layout = useMemo(() => {
-    return baseLayout({
+    return baseLayout(theme, {
       xaxis: { title: 'Time (s)' },
       yaxis: { title: yTitle },
     });
@@ -452,7 +452,7 @@ function SpectrogramPlot({ data }) {
 /* ================================================================== */
 /*  I/Q PLANE PLOT                                                    */
 /* ================================================================== */
-function IQPlanePlot({ data }) {
+function IQPlanePlot({ theme, data }) {
   const traces = useMemo(() => {
     const iVals = data.i || [];
     const qVals = data.q || [];
@@ -471,7 +471,7 @@ function IQPlanePlot({ data }) {
     const allVals = [...iVals.map(Math.abs), ...qVals.map(Math.abs)];
     const maxVal = allVals.length > 0 ? Math.max(...allVals) * 1.15 : 1.2;
 
-    return baseLayout({
+    return baseLayout(theme, {
       xaxis: {
         title: 'In-Phase (I)',
         range: [-maxVal, maxVal],

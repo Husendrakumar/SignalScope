@@ -25,6 +25,15 @@ export default function App() {
   const [analysisError, setAnalysisError] = useState(null);
   const [noticeMessage, setNoticeMessage] = useState('');
   const [backendConnected, setBackendConnected] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('signalScopeTheme');
+    return saved ? saved : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('signalScopeTheme', theme);
+  }, [theme]);
 
   useEffect(() => {
     let isMounted = true;
@@ -246,7 +255,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <Header backendConnected={backendConnected} />
+      <Header backendConnected={backendConnected} theme={theme} setTheme={setTheme} />
       
       {noticeMessage && (
         <div className="toast-notice">

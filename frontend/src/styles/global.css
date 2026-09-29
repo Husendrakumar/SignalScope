@@ -1139,3 +1139,31 @@ button.nav-item {
   border: 1px solid var(--status-pending-border);
 }
 
+
+/* Light Theme Variables */
+[data-theme="light"] {
+  --bg-dark: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-card-subtle: #f8fafc;
+  --bg-card-accent: #f1f5f9;
+  
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-focus: #0ea5e9;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-accent: #0284c7;
+  
+  --status-ready-bg: rgba(16, 185, 129, 0.12);
+  --status-ready-text: #059669;
+  --status-ready-border: rgba(16, 185, 129, 0.3);
+  
+  --status-pending-bg: rgba(100, 116, 139, 0.12);
+  --status-pending-text: #475569;
+  --status-pending-border: rgba(100, 116, 139, 0.3);
+}
+
+/* Base Body Styles utilizing variables */

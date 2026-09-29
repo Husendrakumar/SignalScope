@@ -11,6 +11,7 @@ from app.api.deinterleaving import router as deinterleaving_router
 from app.api.fec import router as fec_router
 from app.api.header import router as header_router
 from app.api.payload import router as payload_router
+from app.api.reports import router as reports_router
 
 app = FastAPI(
     title="SignalScope API",
@@ -56,4 +57,5 @@ app.include_router(deinterleaving_router)
 app.include_router(fec_router)
 app.include_router(header_router)
 app.include_router(payload_router)
+app.include_router(reports_router)
 

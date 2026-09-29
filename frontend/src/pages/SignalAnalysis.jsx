@@ -7,6 +7,7 @@ import SignalInfoCards from '../components/SignalInfoCards';
 import AnalysisResultsSection from '../components/AnalysisResultsSection';
 
 export default function SignalAnalysis({
+    theme,
   selectedFile,
   analysisData,
   modulationData,
@@ -53,6 +54,7 @@ export default function SignalAnalysis({
           />
           <SignalInfoCards selectedFile={selectedFile} analysisData={analysisData} />
           <AnalysisResultsSection
+            selectedFile={selectedFile}
             analysisData={analysisData}
             modulationData={modulationData}
             demodData={demodData}
@@ -66,7 +68,7 @@ export default function SignalAnalysis({
             error={analysisError}
             onAnalyze={onAnalyze}
           />
-          <VisualizationPanel selectedFile={selectedFile} analysisData={analysisData} />
+          <VisualizationPanel theme={theme} selectedFile={selectedFile} analysisData={analysisData} />
         </div>
       ) : (
         <div className="empty-analysis-card">

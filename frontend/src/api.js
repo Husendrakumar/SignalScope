@@ -220,3 +220,31 @@ export async function fetchPayloadExtraction(signalId, syncPattern = '1010101010
 
 
 
+
+/**
+ * Downloads a generated PDF report from the backend.
+ */
+export async function downloadReport(reportData) {
+  const response = await fetch(`${API_BASE_URL}/api/reports/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(reportData)
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to generate report.');
+  }
+  
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SignalScope_Report_${reportData.filename || 'Signal'}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}

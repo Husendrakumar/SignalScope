@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Cpu, Activity, Zap, Radio, ShieldCheck, RefreshCw, AlertCircle, Compass, Binary, Copy, Check, Grid } from 'lucide-react';
+import { downloadReport } from '../api';
+import { Cpu, Activity, Zap, Radio, ShieldCheck, RefreshCw, AlertCircle, Compass, Binary, Copy, Check, Grid, Download } from 'lucide-react';
 
 function formatFrequencyDisplay(hz) {
   if (hz === undefined || hz === null || isNaN(hz)) return '--';
@@ -16,6 +17,7 @@ function formatPower(val) {
 }
 
 export default function AnalysisResultsSection({
+  selectedFile,
   analysisData,
   modulationData,
   demodData,
@@ -31,6 +33,43 @@ export default function AnalysisResultsSection({
 }) {
   const [copiedBits, setCopiedBits] = useState(false);
   const [copiedDeintBits, setCopiedDeintBits] = useState(false);
+
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadReport = async () => {
+    if (!selectedFile) return;
+    try {
+      setIsDownloading(true);
+      const pipelineStatus = {};
+      if (analysisData) pipelineStatus['Load & Detect'] = 'Success';
+      if (modulationData) pipelineStatus['Modulation'] = modulationData.modulation || 'Success';
+      if (demodData) pipelineStatus['Demodulation'] = 'Success';
+      if (deintData) pipelineStatus['Block De-interleaving'] = 'Success';
+      if (convDeintData) pipelineStatus['Convolutional De-interleaving'] = 'Success';
+      if (fecData) pipelineStatus['Viterbi FEC'] = 'Success';
+      if (rsFecData) pipelineStatus['Reed-Solomon FEC'] = 'Success';
+      if (headerData) pipelineStatus['Header Detection'] = 'Success';
+      if (payloadData) pipelineStatus['Payload Recovery'] = 'Success';
+
+      await downloadReport({
+        signal_id: selectedFile.signal_id || 'unknown',
+        filename: selectedFile.filename || 'unknown',
+        format: selectedFile.format || 'unknown',
+        data_type: selectedFile.data_type || 'unknown',
+        sample_rate: selectedFile.sample_rate || 0,
+        sample_count: selectedFile.sample_count || 0,
+        duration_seconds: selectedFile.duration || 0,
+        analysis_data: analysisData,
+        modulation_data: modulationData,
+        pipeline_status: pipelineStatus
+      });
+    } catch (err) {
+      alert('Error generating report: ' + err.message);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const [copiedConvBits, setCopiedConvBits] = useState(false);
   const [copiedFecBits, setCopiedFecBits] = useState(false);
   const [copiedRsBits, setCopiedRsBits] = useState(false);

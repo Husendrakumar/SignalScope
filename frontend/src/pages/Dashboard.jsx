@@ -8,6 +8,7 @@ import AnalysisStatus from '../components/AnalysisStatus';
 import RecentActivity from '../components/RecentActivity';
 
 export default function Dashboard({
+    theme,
   selectedFile,
   analysisData,
   modulationData,
@@ -55,6 +56,7 @@ export default function Dashboard({
       
       {selectedFile && (
         <AnalysisResultsSection
+          selectedFile={selectedFile}
           analysisData={analysisData}
           modulationData={modulationData}
           demodData={demodData}
@@ -70,7 +72,7 @@ export default function Dashboard({
         />
       )}
 
-      <VisualizationPanel selectedFile={selectedFile} analysisData={analysisData} />
+      <VisualizationPanel theme={theme} selectedFile={selectedFile} analysisData={analysisData} />
 
       <div className="bottom-grid">
         <AnalysisStatus selectedFile={selectedFile} analysisData={analysisData} />
