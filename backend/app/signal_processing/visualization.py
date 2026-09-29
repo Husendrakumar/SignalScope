@@ -26,6 +26,9 @@ from app.signal_processing.models import SignalData
 from app.signal_processing.analysis import estimate_dominant_frequency
 
 
+import logging
+logger = logging.getLogger("signalscope.visualization")
+
 def compute_waveform(signal: SignalData, max_points: int = 1000, dom_freq: float = 0.0) -> dict:
     """
     Downsamples the signal for time-domain waveform visualization.
@@ -33,6 +36,8 @@ def compute_waveform(signal: SignalData, max_points: int = 1000, dom_freq: float
     Displays approximately 3 cycles of the dominant frequency if provided.
     """
     n_samples = signal.sample_count
+    num_samples_to_display = n_samples
+    display_duration = signal.duration
     
     # Windowing logic
     dom_freq = abs(dom_freq)
@@ -50,6 +55,17 @@ def compute_waveform(signal: SignalData, max_points: int = 1000, dom_freq: float
 
     subsampled = signal.samples[indices]
     time_vec = (indices / signal.sample_rate).tolist()
+    
+    logger.info(f"--- WAVEFORM DEBUG LOG ---")
+    logger.info(f"signal_id: {signal.filename}")
+    logger.info(f"dom_freq: {dom_freq}")
+    logger.info(f"sample_rate: {signal.sample_rate}")
+    logger.info(f"num_samples_to_display: {num_samples_to_display}")
+    logger.info(f"display_duration: {display_duration}")
+    if len(time_vec) > 0:
+        logger.info(f"returned time_vec[0]: {time_vec[0]}")
+        logger.info(f"returned time_vec[-1]: {time_vec[-1]}")
+    logger.info(f"--------------------------")
 
     if signal.format == "IQ":
         i_samples = np.real(subsampled).astype(np.float32).round(6).tolist()

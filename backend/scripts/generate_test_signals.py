@@ -7,7 +7,13 @@ from app.signal_processing.fec import convolutional_encode, reed_solomon_encode,
 from app.signal_processing.header import build_synthetic_frame, DEFAULT_SYNC_PATTERN
 
 
+_GENERATED = False
+
 def generate_test_signals():
+    global _GENERATED
+    if _GENERATED:
+        return
+    _GENERATED = True
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_backend_dir = os.path.dirname(script_dir)
     output_dir = os.path.join(project_backend_dir, "test_data")

@@ -113,10 +113,27 @@ export default function VisualizationPanel({ selectedFile, analysisData }) {
     }
   }, [isIQ, activeTab]);
 
+  /* ---- Dynamic Cache Key based on domFreq for Waveform race condition ---- */
+  const domFreq = useMemo(() => {
+      if (!analysisData) return null; // Analysis not yet loaded
+      const snr = analysisData?.noise?.estimated_snr_db || 0;
+      if (analysisData?.activity?.signal_present === false || analysisData?.activity?.status === "LOW_ENERGY_OR_NOISE" || snr < 8.0) {
+          return 0.0;
+      }
+      return analysisData?.frequency?.dominant_frequency_hz || 0.0;
+  }, [analysisData]);
+
+  const cacheKey = useMemo(() => {
+      if (activeTab === 'waveform') {
+          return `waveform_${domFreq !== null ? domFreq : 'none'}`;
+      }
+      return activeTab;
+  }, [activeTab, domFreq]);
+
   /* ---- Fetch data for the active tab (with caching) ---- */
   useEffect(() => {
     if (!signalId) return;
-    if (cache[activeTab]) return; // already have data for this tab
+    if (cache[cacheKey]) return; // already have data for this tab + state
 
     let cancelled = false;
     setLoading(true);
@@ -126,15 +143,8 @@ export default function VisualizationPanel({ selectedFile, analysisData }) {
       try {
         let data = null;
         if (activeTab === 'waveform') {
-          // Determine the dominant frequency from the EXISTING backend analysis result
-          let domFreq = 0.0;
-          const snr = analysisData?.noise?.estimated_snr_db || 0;
-          if (analysisData?.activity?.signal_present === false || analysisData?.activity?.status === "LOW_ENERGY_OR_NOISE" || snr < 8.0) {
-              domFreq = 0.0; // fallback to existing behavior for noise-only
-          } else if (analysisData?.frequency?.dominant_frequency_hz) {
-              domFreq = analysisData.frequency.dominant_frequency_hz;
-          }
-          data = await fetchWaveformData(signalId, 1000, domFreq);
+          const fetchFreq = domFreq || 0.0;
+          data = await fetchWaveformData(signalId, 1000, fetchFreq);
         } else if (activeTab === 'spectrum') {
           data = await fetchSpectrumData(signalId);
         } else if (activeTab === 'spectrogram') {
@@ -145,7 +155,7 @@ export default function VisualizationPanel({ selectedFile, analysisData }) {
         }
 
         if (!cancelled) {
-          setCache(prev => ({ ...prev, [activeTab]: data }));
+          setCache(prev => ({ ...prev, [cacheKey]: data }));
           setLoading(false);
         }
       } catch (err) {
@@ -158,9 +168,9 @@ export default function VisualizationPanel({ selectedFile, analysisData }) {
 
     loadData();
     return () => { cancelled = true; };
-  }, [signalId, activeTab, isIQ, cache]);
+  }, [signalId, activeTab, isIQ, cache, cacheKey, domFreq]);
 
-  const vizData = cache[activeTab] || null;
+  const vizData = cache[cacheKey] || null;
 
   /* ================================================================ */
   /*  EMPTY STATE                                                     */
