@@ -88,7 +88,7 @@ function formatFreq(hz) {
 /* ================================================================== */
 /*  Main Component                                                    */
 /* ================================================================== */
-export default function VisualizationPanel({ selectedFile }) {
+export default function VisualizationPanel({ selectedFile, analysisData }) {
   const [activeTab, setActiveTab] = useState('waveform');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -126,7 +126,15 @@ export default function VisualizationPanel({ selectedFile }) {
       try {
         let data = null;
         if (activeTab === 'waveform') {
-          data = await fetchWaveformData(signalId);
+          // Determine the dominant frequency from the EXISTING backend analysis result
+          let domFreq = 0.0;
+          const snr = analysisData?.noise?.estimated_snr_db || 0;
+          if (analysisData?.activity?.signal_present === false || analysisData?.activity?.status === "LOW_ENERGY_OR_NOISE" || snr < 8.0) {
+              domFreq = 0.0; // fallback to existing behavior for noise-only
+          } else if (analysisData?.frequency?.dominant_frequency_hz) {
+              domFreq = analysisData.frequency.dominant_frequency_hz;
+          }
+          data = await fetchWaveformData(signalId, 1000, domFreq);
         } else if (activeTab === 'spectrum') {
           data = await fetchSpectrumData(signalId);
         } else if (activeTab === 'spectrogram') {
@@ -269,18 +277,18 @@ function WaveformPlot({ data }) {
         {
           x: time, y: realI, type: 'scattergl', mode: 'lines',
           name: 'In-Phase (I)', line: { color: ACCENT, width: 1.2 },
-          hovertemplate: 't = %{x:.4f} s<br>I = %{y:.4f}<extra>I</extra>',
+          hovertemplate: 't = %{x:.6f} s<br>I = %{y:.4f}<extra>I</extra>',
         },
         {
           x: time, y: imagQ, type: 'scattergl', mode: 'lines',
           name: 'Quadrature (Q)', line: { color: ACCENT2, width: 1.2 },
-          hovertemplate: 't = %{x:.4f} s<br>Q = %{y:.4f}<extra>Q</extra>',
+          hovertemplate: 't = %{x:.6f} s<br>Q = %{y:.4f}<extra>Q</extra>',
         },
         {
           x: time, y: mag, type: 'scattergl', mode: 'lines',
           name: 'Magnitude', line: { color: ACCENT3, width: 1, dash: 'dot' },
           visible: 'legendonly',
-          hovertemplate: 't = %{x:.4f} s<br>|z| = %{y:.4f}<extra>Mag</extra>',
+          hovertemplate: 't = %{x:.6f} s<br>|z| = %{y:.4f}<extra>Mag</extra>',
         },
       ];
     } else {
@@ -289,7 +297,7 @@ function WaveformPlot({ data }) {
       return [{
         x: time, y: amp, type: 'scattergl', mode: 'lines',
         name: 'Amplitude', line: { color: ACCENT, width: 1.2 },
-        hovertemplate: 't = %{x:.4f} s<br>Amp = %{y:.4f}<extra></extra>',
+        hovertemplate: 't = %{x:.6f} s<br>Amp = %{y:.4f}<extra></extra>',
       }];
     }
   }, [data]);

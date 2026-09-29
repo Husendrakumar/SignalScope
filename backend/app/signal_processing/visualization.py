@@ -23,19 +23,33 @@ regardless of the original file format.  The ``signal.format`` field
 import numpy as np
 import scipy.signal
 from app.signal_processing.models import SignalData
+from app.signal_processing.analysis import estimate_dominant_frequency
 
 
-def compute_waveform(signal: SignalData, max_points: int = 1000) -> dict:
+def compute_waveform(signal: SignalData, max_points: int = 1000, dom_freq: float = 0.0) -> dict:
     """
     Downsamples the signal for time-domain waveform visualization.
     Returns time vector and amplitude/I/Q arrays.
+    Displays approximately 3 cycles of the dominant frequency if provided.
     """
     n_samples = signal.sample_count
+    
+    # Windowing logic
+    dom_freq = abs(dom_freq)
+    if dom_freq > 1.0:
+        period = 1.0 / dom_freq
+        display_duration = 3.0 * period
+        num_samples_to_display = int(display_duration * signal.sample_rate)
+        
+        # Ensure we don't go out of bounds or show < 2 points
+        if num_samples_to_display > 10 and num_samples_to_display < n_samples:
+            n_samples = num_samples_to_display
+
     step = max(1, n_samples // max_points)
     indices = np.arange(0, n_samples, step)[:max_points]
 
     subsampled = signal.samples[indices]
-    time_vec = (indices / signal.sample_rate).round(6).tolist()
+    time_vec = (indices / signal.sample_rate).tolist()
 
     if signal.format == "IQ":
         i_samples = np.real(subsampled).astype(np.float32).round(6).tolist()

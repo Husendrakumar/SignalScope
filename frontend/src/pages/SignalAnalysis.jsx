@@ -66,7 +66,7 @@ export default function SignalAnalysis({
             error={analysisError}
             onAnalyze={onAnalyze}
           />
-          <VisualizationPanel selectedFile={selectedFile} />
+          <VisualizationPanel selectedFile={selectedFile} analysisData={analysisData} />
         </div>
       ) : (
         <div className="empty-analysis-card">

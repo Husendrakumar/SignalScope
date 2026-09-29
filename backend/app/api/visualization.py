@@ -13,7 +13,8 @@ router = APIRouter(prefix="/api/visualization", tags=["Visualization"])
 @router.get("/waveform/{signal_id}")
 async def get_waveform(
     signal_id: str,
-    max_points: int = Query(default=1000, ge=100, le=10000)
+    max_points: int = Query(default=1000, ge=100, le=10000),
+    dom_freq: float = Query(default=0.0)
 ):
     signal = session_store.get_session(signal_id)
     if not signal:
@@ -23,7 +24,7 @@ async def get_waveform(
         )
 
     try:
-        return compute_waveform(signal, max_points=max_points)
+        return compute_waveform(signal, max_points=max_points, dom_freq=dom_freq)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error computing waveform: {str(e)}")
 

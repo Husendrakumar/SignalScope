@@ -70,7 +70,7 @@ export default function Dashboard({
         />
       )}
 
-      <VisualizationPanel selectedFile={selectedFile} />
+      <VisualizationPanel selectedFile={selectedFile} analysisData={analysisData} />
 
       <div className="bottom-grid">
         <AnalysisStatus selectedFile={selectedFile} analysisData={analysisData} />

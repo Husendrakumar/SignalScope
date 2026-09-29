@@ -48,8 +48,8 @@ export async function uploadSignalFile(file) {
 /**
  * Fetches downsampled time-domain waveform data for a signal session.
  */
-export async function fetchWaveformData(signalId, maxPoints = 1000) {
-  const response = await fetch(`${API_BASE_URL}/api/visualization/waveform/${signalId}?max_points=${maxPoints}`);
+export async function fetchWaveformData(signalId, maxPoints = 1000, domFreq = 0.0) {
+  const response = await fetch(`${API_BASE_URL}/api/visualization/waveform/${signalId}?max_points=${maxPoints}&dom_freq=${domFreq}`);
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.detail || 'Failed to fetch waveform visualization.');
