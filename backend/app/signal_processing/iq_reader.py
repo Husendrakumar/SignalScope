@@ -29,7 +29,7 @@ Sample rate
 -----------
 Raw IQ files carry no header, so the sample rate cannot be determined
 from the file alone.  A ``default_sample_rate`` parameter (default
-48 000 Hz) is used.  When a companion metadata file or user input
+1 000 000 Hz) is used.  When a companion metadata file or user input
 provides the true sample rate, it should be passed explicitly.
 
 Why complex64?
@@ -44,7 +44,7 @@ import numpy as np
 from app.signal_processing.models import SignalData
 
 
-def load_iq(path: str, default_sample_rate: int = 48000) -> SignalData:
+def load_iq(path: str, default_sample_rate: int = 1_000_000) -> SignalData:
     """
     Load an IQ signal file and return a ``SignalData`` with complex64 samples.
 
@@ -54,7 +54,7 @@ def load_iq(path: str, default_sample_rate: int = 48000) -> SignalData:
         Filesystem path to the raw IQ binary file.
     default_sample_rate : int, optional
         Sample rate in Hz to assume when no external metadata is available.
-        Defaults to 48 000 Hz (the project's test-data convention).
+        Defaults to 1 000 000 Hz (the project's test-data convention).
 
     Returns
     -------

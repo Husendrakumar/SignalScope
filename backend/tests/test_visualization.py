@@ -65,8 +65,21 @@ def test_visualization_endpoints():
     assert "imag_q" in iq_wf_data
 
     # Test IQ spectrum
-    res_iq_spec = client.get(f"/api/visualization/spectrum/{iq_id}")
+    res_iq_spec = client.get(f"/api/visualization/spectrum/{iq_id}?nfft=2048")
     assert res_iq_spec.status_code == 200
+    spec_data = res_iq_spec.json()
+    assert spec_data["sample_rate"] == 1000000
+    
+    # Max frequency in FFT for IQ is +500,000 Hz (Nyquist)
+    max_freq = max(spec_data["frequencies"])
+    assert 490000 < max_freq <= 500000
+    
+    # Peak frequency should be near 1000 Hz for test_sine.iq
+    freqs = spec_data["frequencies"]
+    mags = spec_data["magnitudes_db"]
+    peak_idx = mags.index(max(mags))
+    assert abs(freqs[peak_idx] - 1000.0) < 500
+
 
     # Test IQ constellation
     res_iq_const = client.get(f"/api/visualization/constellation/{iq_id}")

@@ -39,9 +39,22 @@ def test_analysis_endpoint_all_signals():
         assert data["signal_id"] == signal_id
         assert data["filename"] == filename
         assert data["format"] == expected_format
-        assert data["sample_rate"] > 0
-        assert data["sample_count"] > 0
-        assert data["duration_seconds"] > 0.0
+        
+        if expected_format == "WAV":
+            assert data["sample_rate"] == 48000
+            assert data["sample_count"] == 96000
+            assert abs(data["duration_seconds"] - 2.0) < 0.01
+        elif expected_format == "IQ":
+            assert data["sample_rate"] == 1000000
+            assert data["sample_count"] == 2000000
+            assert abs(data["duration_seconds"] - 2.0) < 0.01
+            
+            # Additional rigorous checks for IQ tests
+            if "fsk" in filename:
+                # FSK tones were generated at 5 kHz and 8 kHz
+                dom_freq_hz = freq["dominant_frequency_hz"]
+                assert abs(dom_freq_hz - 5000) < 500 or abs(dom_freq_hz - 8000) < 500
+
 
         # 2. Signal statistics
         stats = data["statistics"]

@@ -74,27 +74,27 @@ def test_wav_reader_sine():
 def test_iq_reader_fsk():
     """TEST 2: IQ reader produces correct metadata and complex64 samples."""
     test_iq = os.path.join("test_data", "test_fsk.iq")
-    signal = load_iq(test_iq, default_sample_rate=48000)
+    signal = load_iq(test_iq, )
 
     assert signal.format == "IQ"
-    assert signal.sample_rate == 48000
-    assert signal.sample_count == 96000
+    assert signal.sample_rate == 1000000
+    assert signal.sample_count == 2000000
     assert abs(signal.duration - 2.0) < 0.01
     assert signal.data_type == "complex64"
     assert signal.samples.dtype == np.complex64
-    assert signal.samples.shape == (96000,)
+    assert signal.samples.shape == (2000000,)
     # IQ samples should have non-zero imaginary part (FSK complex exponential)
     assert not np.allclose(signal.samples.imag, 0.0, atol=1e-3)
 
 
 def test_iq_reader_sine():
-    """Original sine IQ test — still passes."""
+    """Original sine IQ test - still passes."""
     test_iq = os.path.join("test_data", "test_sine.iq")
-    signal = load_iq(test_iq, default_sample_rate=48000)
+    signal = load_iq(test_iq, )
 
     assert signal.format == "IQ"
-    assert signal.sample_rate == 48000
-    assert signal.sample_count == 96000
+    assert signal.sample_rate == 1000000
+    assert signal.sample_count == 2000000
     assert abs(signal.duration - 2.0) < 0.01
     assert signal.data_type == "complex64"
     assert signal.samples.dtype == np.complex64
@@ -208,17 +208,17 @@ def test_load_signal_wav():
 
 
 def test_load_signal_iq():
-    """load_signal() with IQ → complex64 + correct metadata."""
+    """load_signal() with IQ -> complex64 + correct metadata."""
     path = os.path.join("test_data", "test_fsk.iq")
     signal = load_signal(path, filename="test_fsk.iq")
 
     assert signal.format == "IQ"
     assert signal.data_type == "complex64"
     assert signal.samples.dtype == np.complex64
-    assert signal.sample_rate == 48000
-    assert signal.sample_count == 96000
+    assert signal.sample_rate == 1000000
+    assert signal.sample_count == 2000000
     assert abs(signal.duration - 2.0) < 0.01
-    assert signal.filename == "test_fsk.iq"
+    assert signal.filename == "test_fsk.iq" 
 
 
 def test_load_signal_auto_filename():
@@ -277,10 +277,10 @@ def test_api_upload_iq():
     data = res.json()
     assert data["filename"] == "test_sine.iq"
     assert data["format"] == "IQ"
-    assert data["sample_rate"] == 48000
-    assert data["sample_count"] == 96000
+    assert data["sample_rate"] == 1000000
+    assert data["sample_count"] == 2000000
     assert data["duration_seconds"] == 2.0
-    assert data["data_type"] == "complex64"
+    assert data["data_type"] == "complex64" 
 
 
 def test_api_upload_fsk_wav():
@@ -300,7 +300,7 @@ def test_api_upload_fsk_wav():
 
 
 def test_api_upload_fsk_iq():
-    """API upload for FSK IQ — verifies the exact values from the spec."""
+    """API upload for FSK IQ - verifies the exact values from the spec."""
     client = TestClient(app)
     test_iq_path = os.path.join("test_data", "test_fsk.iq")
     with open(test_iq_path, "rb") as f:
@@ -309,10 +309,10 @@ def test_api_upload_fsk_iq():
     assert res.status_code == 200
     data = res.json()
     assert data["format"] == "IQ"
-    assert data["sample_rate"] == 48000
-    assert data["sample_count"] == 96000
+    assert data["sample_rate"] == 1000000
+    assert data["sample_count"] == 2000000
     assert data["duration_seconds"] == 2.0
-    assert data["data_type"] == "complex64"
+    assert data["data_type"] == "complex64" 
 
 
 def test_api_upload_invalid_extension():
@@ -338,3 +338,37 @@ def test_api_upload_invalid_iq_format():
     res = client.post("/api/files/upload", files={"file": ("corrupted.iq", io.BytesIO(b"12345"), "application/octet-stream")})
     assert res.status_code == 400
     assert res.json() == {"detail": "Unable to read IQ file. Expected interleaved float32 I/Q samples."}
+import os
+import struct
+import tempfile
+import numpy as np
+
+def test_raw_iq_parsing_values():
+    """Verify raw float32 interleaved parses correctly to complex64"""
+    import numpy as np
+    from app.signal_processing.iq_reader import load_iq
+
+    # Create dummy IQ data: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    # which is 3 complex samples: 1+2j, 3+4j, 5+6j
+    raw_floats = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    raw_bytes = struct.pack(f"<{len(raw_floats)}f", *raw_floats)
+
+    with tempfile.NamedTemporaryFile(suffix=".iq", delete=False) as tmp:
+        tmp.write(raw_bytes)
+        tmp_path = tmp.name
+
+    try:
+        # Load the IQ file
+        signal = load_iq(tmp_path, default_sample_rate=1000000)
+
+        assert signal.format == "IQ"
+        assert signal.data_type == "complex64"
+        assert signal.samples.dtype == np.complex64
+        assert signal.sample_count == 3
+        
+        # Verify actual values!
+        expected = np.array([1.0 + 2.0j, 3.0 + 4.0j, 5.0 + 6.0j], dtype=np.complex64)
+        np.testing.assert_array_equal(signal.samples, expected)
+        
+    finally:
+        os.unlink(tmp_path)

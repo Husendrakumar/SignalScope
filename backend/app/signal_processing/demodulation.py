@@ -55,7 +55,9 @@ def estimate_fsk_tones(signal: SignalData) -> tuple[float, float, float]:
         raise ValueError("Cannot estimate FSK tones: Signal frequency histogram is empty.")
 
     norm_counts = hist_counts / max_count
-    peaks, _ = scipy.signal.find_peaks(norm_counts, height=0.15, distance=4)
+    padded_counts = np.pad(norm_counts, (1, 1), 'constant')
+    peaks_shifted, _ = scipy.signal.find_peaks(padded_counts, height=0.15, distance=4)
+    peaks = peaks_shifted - 1
 
     if len(peaks) < 2:
         nfft = 2048
@@ -70,7 +72,9 @@ def estimate_fsk_tones(signal: SignalData) -> tuple[float, float, float]:
 
         max_psd = np.max(psd) if len(psd) > 0 else 1.0
         norm_psd = psd / max_psd
-        psd_peaks, _ = scipy.signal.find_peaks(norm_psd, height=0.15, distance=max(2, nfft // 64))
+        bin_res = fs / nfft
+        min_dist_bins = max(2, int(500.0 / bin_res))
+        psd_peaks, _ = scipy.signal.find_peaks(norm_psd, height=0.15, distance=min_dist_bins)
 
         if len(psd_peaks) < 2:
             raise ValueError("Signal does not exhibit two distinct FSK frequency tones.")
@@ -188,6 +192,8 @@ def synchronize_and_demodulate(
             best_offset = offset
 
     aligned_offset = (best_offset + 1) % sps
+    if aligned_offset > sps // 2:
+        aligned_offset -= sps
 
     # 2. Demodulate symbols with aligned_offset
     bits = []
@@ -199,8 +205,9 @@ def synchronize_and_demodulate(
         end_i = min(start_i + sps, n_samples)
         if start_i >= n_samples:
             break
-
-        block_f = float(np.mean(inst_freq[start_i:end_i]))
+        start_i_clean = max(0, start_i)
+        
+        block_f = float(np.mean(inst_freq[start_i_clean:end_i]))
 
         dist_low = abs(block_f - f_low)
         dist_high = abs(block_f - f_high)
@@ -230,7 +237,7 @@ def demodulate_fsk(signal: SignalData, signal_id: str = "") -> dict:
     if mod_info["modulation"] == "UNKNOWN":
         feats = mod_info.get("features", {})
         inst_std = feats.get("inst_freq_std_hz", 0.0)
-        if inst_std < 0.005 * signal.sample_rate:
+        if inst_std < min(0.005 * signal.sample_rate, 250.0):
             raise ValueError("Signal is unmodulated or continuous tone. FSK demodulation requires an FSK signal.")
 
     # 2. Estimate FSK tones

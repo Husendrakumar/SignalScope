@@ -78,7 +78,9 @@ def extract_modulation_features(signal: SignalData) -> dict:
 
     if np.max(hist_counts) > 0:
         norm_counts = hist_counts / np.max(hist_counts)
-        peaks, _ = scipy.signal.find_peaks(norm_counts, height=0.20, distance=3)
+        padded_counts = np.pad(norm_counts, (1, 1), 'constant')
+        peaks_shifted, _ = scipy.signal.find_peaks(padded_counts, height=0.20, distance=3)
+        peaks = peaks_shifted - 1
         num_freq_peaks = len(peaks)
         freq_peak_freqs = [float(bin_centers[p]) for p in peaks]
     else:
@@ -155,7 +157,7 @@ def classify_signal_modulation(signal: SignalData, signal_id: str = "") -> dict:
     phase_std = feats["phase_std"]
     fs = signal.sample_rate
 
-    freq_std_threshold = 0.005 * fs
+    freq_std_threshold = min(0.005 * fs, 250.0)
 
     # 1. FSK Classification
     is_fsk = (

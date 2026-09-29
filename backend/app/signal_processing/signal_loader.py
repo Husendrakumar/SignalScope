@@ -66,7 +66,7 @@ def load_signal(
     sample_rate : int or None, optional
         Override the sample rate.  For WAV files the rate is read from the
         file header and this parameter is ignored.  For IQ files, if
-        ``None`` the reader's default (48 000 Hz) is used.
+        ``None`` the reader's default (1 000 000 Hz) is used.
 
     Returns
     -------
